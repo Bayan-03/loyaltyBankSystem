@@ -1,5 +1,8 @@
-﻿using BankLoyaltySystem.Services;
+﻿using BankLoyaltySystem.Models;
+using BankLoyaltySystem.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace BankLoyaltySystem.Controllers
@@ -8,67 +11,100 @@ namespace BankLoyaltySystem.Controllers
     {
         private readonly ITransactionService _transactionService;
         private readonly ILogger<HomeController> _logger;
+        private readonly BankLoyaltySystem1Context _context; // إضافة الـ DbContext
 
-        public HomeController(ITransactionService transactionService, ILogger<HomeController> logger)
+        // تعديل الكونستركتر ليشمل DbContext
+        public HomeController(ITransactionService transactionService, ILogger<HomeController> logger, BankLoyaltySystem1Context context)
         {
             _transactionService = transactionService;
             _logger = logger;
+            _context = context; // تخصيص الـ DbContext
         }
 
-        public IActionResult Index()
+        // صفحة البداية
+        public IActionResult Index(int? customerId)
         {
             try
             {
-                // In a real app, get customerId from authenticated user
-                int customerId = GetCurrentCustomerId();
-                var customer = _transactionService.GetCustomerWithDetails(customerId);
+                // في حالة عدم إرسال رقم العميل، يتم استخدام الرقم الافتراضي (1)
+                customerId ??= 1;
+
+                // التحقق من وجود العميل في قاعدة البيانات
+                var customer = _transactionService.GetCustomerWithDetails(customerId.Value);
+
+                if (customer == null)
+                {
+                    // العميل غير موجود، اعرض رسالة خطأ
+                    TempData["ErrorMessage"] = "العميل غير موجود في النظام";
+                    return RedirectToAction("Index");  // التوجيه إلى صفحة الخطأ
+                }
+
                 return View(customer);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading customer dashboard");
-                return View("Error");
+                return View("Index");
             }
         }
 
+        // إيداع
         [HttpPost]
         public IActionResult Deposit(decimal amount)
         {
             try
             {
-                int customerId = GetCurrentCustomerId();
-                _transactionService.Deposit(customerId, amount);
-                TempData["SuccessMessage"] = "Deposit completed successfully";
+                int customerId = GetCurrentCustomerId(); // أو أي طريقة تجيب بها رقم العميل
+
+                // استدعاء الإجراء
+                var customerIdParam = new SqlParameter("@customerID", customerId);
+                var amountParam = new SqlParameter("@amount", amount);
+
+                // استدعاء الإجراء المخزن باستخدام ExecuteSqlRaw
+                _context.Database.ExecuteSqlRaw("EXEC DepositMoney @customerID, @amount", customerIdParam, amountParam);
+
+                TempData["SuccessMessage"] = "تم الإيداع بنجاح!";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing deposit");
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogError(ex, "خطأ أثناء تنفيذ الإيداع");
+                TempData["ErrorMessage"] = "حدث خطأ أثناء الإيداع: " + ex.Message;
             }
+
             return RedirectToAction("Index");
         }
 
+        // سحب
         [HttpPost]
         public IActionResult Withdraw(decimal amount)
         {
             try
             {
-                int customerId = GetCurrentCustomerId();
-                _transactionService.Withdraw(customerId, amount);
-                TempData["SuccessMessage"] = "Withdrawal completed successfully";
+                int customerId = GetCurrentCustomerId(); // أو أي طريقة تجيب بها رقم العميل
+
+                // استدعاء الإجراء
+                var customerIdParam = new SqlParameter("@customerID", customerId);
+                var amountParam = new SqlParameter("@amount", amount);
+
+                // استدعاء الإجراء المخزن باستخدام ExecuteSqlRaw
+                _context.Database.ExecuteSqlRaw("EXEC WithdrawMoney @customerID, @amount", customerIdParam, amountParam);
+
+                TempData["SuccessMessage"] = "تم السحب بنجاح!";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing withdrawal");
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogError(ex, "خطأ أثناء تنفيذ السحب");
+                TempData["ErrorMessage"] = "حدث خطأ أثناء السحب: " + ex.Message;
             }
+
             return RedirectToAction("Index");
+
         }
 
+        // للحصول على رقم العميل (للإختبار)
         private int GetCurrentCustomerId()
         {
-            // For demo purposes, using customer with ID 1
-            // In a real app, get from authenticated user claims
+            // في هذا المثال، يتم استخدام العميل رقم 1. في التطبيق الحقيقي يمكنك استخدام بيانات المستخدم الموثقة
             return 1;
         }
     }
