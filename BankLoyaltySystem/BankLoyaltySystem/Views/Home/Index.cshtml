@@ -1,0 +1,76 @@
+﻿@model CustomerFullDetail
+@{
+    ViewData["Title"] = "نظام نقاط الولاء";
+}
+
+<div class="container dashboard">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="balance-section">
+        <h3>الرصيد المتاح</h3>
+        <h1>@Model.AccountBalance?.ToString("C")</h1>
+    </div>
+
+    <div class="actions-section">
+        <form asp-action="Deposit" method="post" class="transaction-form">
+            <div class="form-group">
+                <input type="number" name="amount" class="form-control" placeholder="أدخل المبلغ" step="0.01" min="0.01" required>
+            </div>
+            <button type="submit" class="btn btn-primary">إيداع</button>
+        </form>
+
+        <form asp-action="Withdraw" method="post" class="transaction-form">
+            <div class="form-group">
+                <input type="number" name="amount" class="form-control" placeholder="أدخل المبلغ" step="0.01" min="0.01" required>
+            </div>
+            <button type="submit" class="btn btn-primary">سحب</button>
+        </form>
+    </div>
+
+    <div class="loyalty-section">
+        <h3>نقاط الولاء</h3>
+        <div class="points-container">
+            <div class="point-card bronze">
+                <span class="point-type">برونزية</span>
+                <span class="point-value">@Model.BronzePoints</span>
+            </div>
+            <div class="point-card silver">
+                <span class="point-type">فضية</span>
+                <span class="point-value">@Model.SilverPoints</span>
+            </div>
+            <div class="point-card gold">
+                <span class="point-type">ذهبية</span>
+                <span class="point-value">@Model.GoldPoints</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-section">
+        <h3>إحصائيات الحساب</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">عدد الإيداعات</span>
+                <span class="stat-value">@Model.TotalDeposits</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">إجمالي الإيداعات</span>
+                <span class="stat-value">@Model.TotalDepositedAmount?.ToString("C")</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">عدد السحوبات</span>
+                <span class="stat-value">@Model.TotalWithdrawals</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">إجمالي السحوبات</span>
+                <span class="stat-value">@Model.TotalWithdrawnAmount?.ToString("C")</span>
+            </div>
+        </div>
+    </div>
+</div>
