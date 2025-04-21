@@ -76,6 +76,34 @@ namespace BankLoyaltySystem.Controllers
 
         // سحب
         [HttpPost]
+        //public IActionResult Withdraw(decimal amount)
+        //{
+        //    try
+        //    {
+        //        int customerId = GetCurrentCustomerId(); // أو أي طريقة تجيب بها رقم العميل
+
+        //        // استدعاء الإجراء
+        //        var customerIdParam = new SqlParameter("@customerID", customerId);
+        //        var amountParam = new SqlParameter("@amount", amount);
+
+        //        // استدعاء الإجراء المخزن باستخدام ExecuteSqlRaw
+        //        _context.Database.ExecuteSqlRaw("EXEC WithdrawMoney @customerID, @amount", customerIdParam, amountParam);
+
+        //        TempData["SuccessMessage"] = "تم السحب بنجاح!";
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "خطأ أثناء تنفيذ السحب");
+        //        TempData["ErrorMessage"] = "حدث خطأ أثناء السحب: " + ex.Message;
+        //    }
+
+        //    return RedirectToAction("Index");
+
+        //}
+
+
+
+        [HttpPost]
         public IActionResult Withdraw(decimal amount)
         {
             try
@@ -87,9 +115,20 @@ namespace BankLoyaltySystem.Controllers
                 var amountParam = new SqlParameter("@amount", amount);
 
                 // استدعاء الإجراء المخزن باستخدام ExecuteSqlRaw
-                _context.Database.ExecuteSqlRaw("EXEC WithdrawMoney @customerID, @amount", customerIdParam, amountParam);
+                var result = _context.Database.ExecuteSqlRaw("EXEC WithdrawMoney @customerID, @amount", customerIdParam, amountParam);
 
-                TempData["SuccessMessage"] = "تم السحب بنجاح!";
+                // الحصول على الرسالة الناتجة من SQL
+                var message = result.ToString();
+
+                // إذا كان هناك خطأ في السحب
+                if (message.Contains("خطأ"))
+                {
+                    TempData["ErrorMessage"] = message;
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = message;
+                }
             }
             catch (Exception ex)
             {
@@ -98,8 +137,10 @@ namespace BankLoyaltySystem.Controllers
             }
 
             return RedirectToAction("Index");
-
         }
+
+
+
 
         // للحصول على رقم العميل (للإختبار)
         private int GetCurrentCustomerId()

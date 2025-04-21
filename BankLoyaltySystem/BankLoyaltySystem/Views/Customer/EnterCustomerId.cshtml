@@ -1,0 +1,18 @@
+﻿@{
+    ViewData["Title"] = "إدخال رقم العميل";
+}
+
+<h2>إدخال رقم العميل</h2>
+
+<form asp-action="LoadCustomer" method="get">
+    <div class="mb-3">
+        <label for="customerId" class="form-label">رقم العميل</label>
+        <input type="number" name="customerId" id="customerId" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">تحميل</button>
+</form>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger mt-3">@ViewBag.Error</div>
+}
