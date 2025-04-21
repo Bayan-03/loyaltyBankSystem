@@ -1,4 +1,5 @@
 ﻿using BankLoyaltySystem.Models;
+using BankLoyaltySystem.Models.ViewModels;
 using BankLoyaltySystem.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -148,5 +149,42 @@ namespace BankLoyaltySystem.Controllers
             // في هذا المثال، يتم استخدام العميل رقم 1. في التطبيق الحقيقي يمكنك استخدام بيانات المستخدم الموثقة
             return 1;
         }
+
+
+        public IActionResult TransactionHistory()
+        {
+            int customerId = GetCurrentCustomerId();
+
+            // استرجاع عمليات الإيداع
+            var deposits = _context.Deposits
+                .Where(d => d.CustomerId == customerId)
+                .Select(d => new TransactionHistoryViewModel
+                {
+                    TransactionType = "إيداع",
+                    Amount = d.Amount,
+                    Date = d.DepositDate ?? DateTime.Now
+                });
+
+            // استرجاع عمليات السحب
+            var withdrawals = _context.Withdrawals
+                .Where(w => w.CustomerId == customerId)
+                .Select(w => new TransactionHistoryViewModel
+                {
+                    TransactionType = "سحب",
+                    Amount = w.Amount,
+                    Date = w.WithdrawalDate ?? DateTime.Now
+                });
+
+            // دمج العمليات في قائمة واحدة
+            var transactions = deposits
+                .Union(withdrawals)
+                .OrderByDescending(t => t.Date)
+                .ToList();
+
+            return View(transactions);
+        }
+
     }
+
+
 }

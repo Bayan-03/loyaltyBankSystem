@@ -1,0 +1,60 @@
+﻿@model List<BankLoyaltySystem.Models.ViewModels.TransactionHistoryViewModel>
+
+@{
+    ViewData["Title"] = "كشف الحساب";
+}
+
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h2 style="color: #2a266c;">كشف حساب العميل</h2>
+        <p style="color: #00ae9a;">جميع العمليات المالية الخاصة بك</p>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered text-center">
+            <thead style="background-color: #2a266c; color: white;">
+                <tr>
+                    <th>نوع العملية</th>
+                    <th>المبلغ (ر.س)</th>
+                    <th>التاريخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.TransactionType</td>
+                        <td>@item.Amount.ToString("N2")</td>
+                        <td>@item.Date.ToString("yyyy/MM/dd HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="@Url.Action("Index", "Home")" class="btn btn-lg" style="background-color: #00ae9a; color: white;">
+            الرجوع للصفحة الرئيسية
+        </a>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    th, td {
+        vertical-align: middle;
+    }
+
+    .btn:hover {
+        background-color: #2a266c;
+        color: white;
+    }
+</style>
