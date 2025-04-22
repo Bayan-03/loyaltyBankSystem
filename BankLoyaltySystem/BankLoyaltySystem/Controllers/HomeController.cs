@@ -22,32 +22,69 @@ namespace BankLoyaltySystem.Controllers
             _context = context; // تخصيص الـ DbContext
         }
 
-        // صفحة البداية
-        public IActionResult Index(int? customerId)
+        [HttpGet]
+        public IActionResult EnterCustomerId()
         {
-            try
-            {
-                // في حالة عدم إرسال رقم العميل، يتم استخدام الرقم الافتراضي (1)
-                customerId ??= 1;
-
-                // التحقق من وجود العميل في قاعدة البيانات
-                var customer = _transactionService.GetCustomerWithDetails(customerId.Value);
-
-                if (customer == null)
-                {
-                    // العميل غير موجود، اعرض رسالة خطأ
-                    TempData["ErrorMessage"] = "العميل غير موجود في النظام";
-                    return RedirectToAction("Index");  // التوجيه إلى صفحة الخطأ
-                }
-
-                return View(customer);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading customer dashboard");
-                return View("Index");
-            }
+            return View();
         }
+
+        [HttpPost]
+        public IActionResult EnterCustomerId(int customerId)
+        {
+            var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == customerId);
+
+            if (customer == null)
+            {
+                TempData["ErrorMessage"] = "رقم العميل غير موجود.";
+                return RedirectToAction("EnterCustomerId");
+            }
+
+            return RedirectToAction("Index", new { customerId });
+        }
+
+        public IActionResult Index(int customerId)
+        {
+            var customer = _context.Customers.FirstOrDefault(c => c.CustomerId == customerId);
+
+            if (customer == null)
+            {
+                TempData["ErrorMessage"] = "العميل غير موجود.";
+                return RedirectToAction("EnterCustomerId");
+            }
+
+            return View("Index", customer);  // تأكد من إرسال كائن من نوع Customer
+        }
+
+
+
+
+
+        //// صفحة البداية
+        //public IActionResult Index(int? customerId)
+        //{
+        //    try
+        //    {
+        //        // في حالة عدم إرسال رقم العميل، يتم استخدام الرقم الافتراضي (1)
+        //        customerId ??= 1;
+
+        //        // التحقق من وجود العميل في قاعدة البيانات
+        //        var customer = _transactionService.GetCustomerWithDetails(customerId.Value);
+
+        //        if (customer == null)
+        //        {
+        //            // العميل غير موجود، اعرض رسالة خطأ
+        //            TempData["ErrorMessage"] = "العميل غير موجود في النظام";
+        //            return RedirectToAction("Index");  // التوجيه إلى صفحة الخطأ
+        //        }
+
+        //        return View(customer);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error loading customer dashboard");
+        //        return View("Index");
+        //    }
+        //}
 
         // إيداع
         [HttpPost]
